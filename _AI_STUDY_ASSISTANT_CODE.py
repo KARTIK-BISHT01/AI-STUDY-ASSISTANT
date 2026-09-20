@@ -4,6 +4,7 @@ print("=================================")
 
 subjects = []
 notes={}
+n=0
 while True:
 
     print("\n1. View Subjects")
@@ -12,7 +13,9 @@ while True:
     print("4. View Notes")
     print("5. Delete Subject")
     print("6. Edit Subject")
-    print("7. Exit")
+    print("7. Delete Notes")
+    print("8. Edit Notes")
+    print("9. Exit")
 
     choice = input("\nEnter your choice: ")
 
@@ -130,7 +133,7 @@ while True:
         if len(subjects) ==0:
             print("\nNo subjects to Edit! ")
         else:
-            print("\nSelect the you want to Edit:")
+            print("\nSelect the subject you want to Edit:")
 
             for i in range(len(subjects)):
                 print(i+1,".",subjects[i])
@@ -158,7 +161,54 @@ while True:
                 print("\nPlease enter a valid input! ")
             
 
-    elif choice == "7":
+    elif choice =="7":
+        if len(subjects) ==0:
+            print("\nAdd a subjects First!")
+            
+        else:
+            print("\nSelect a subject First:")
+            
+            for i in range(len(subjects)):
+                print(i+1,".",subjects[i])
+                
+            try:    
+                subject_choice=int(input("\nEnter the subject number:"))
+                
+                if subject_choice>=1 and subject_choice<=len(subjects):
+                    
+                    if subjects[subject_choice-1] not in notes:
+                        print("\nAdd notes First!")
+                        
+                    else:
+                        print("\nSelect the note you want to Delete:")
+                        
+                        for i in notes[subjects[subject_choice-1]]:
+                            n=n+1
+                            print(n,".",i)
+                        n=0    
+                        
+                        try:    
+                            note_choice=int(input("\nEnter the serial number of the note which you want to delete:"))
+                        
+                            if note_choice>=1 and note_choice<=len(notes[subjects[subject_choice-1]]):
+                                deleted_note=notes[subjects[subject_choice-1]].pop(note_choice-1)
+                                print("\nDelete note:",deleted_note)
+                                
+                            else:
+                                print("\nNo note at that serial number exists!")
+                            
+                        except ValueError:
+                            print("\nEnter a valid input!")
+                        
+                else:
+                    print("\nNo subject at that serial number exists!")
+                     
+            except ValueError:
+                print("\nEnter a valid input!")
+                    
+        
+            
+    elif choice == "9":
         print("\nThank you for using AI Study Assistant!")
         break
 
