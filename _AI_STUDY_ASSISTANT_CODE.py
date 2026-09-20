@@ -41,21 +41,24 @@ while True:
             
             for i in range(len(subjects)):
                 print(i+1,".",subjects[i])
+
+            try:    
+                subject_choice=int(input("\nEnter subject number:"))
                 
-            subject_choice=int(input("\nEnter subject number:"))
-            
-            if subject_choice>=1 and subject_choice<=len(subjects):
-                selected_subject=subjects[subject_choice-1]
-                
-                note=input("\nEnter your note:")
-                
-                if selected_subject not in notes:
-                    notes[selected_subject]=[]
-                notes[selected_subject].append(note)
-                print("\nNote added successfully!")
+                if subject_choice>=1 and subject_choice<=len(subjects):
+                    selected_subject=subjects[subject_choice-1]
                     
-            else:
-                print("\nInvalid subject number!")
+                    note=input("\nEnter your note:")
+                    
+                    if selected_subject not in notes:
+                        notes[selected_subject]=[]
+                    notes[selected_subject].append(note)
+                    print("\nNote added successfully!")
+                        
+                else:
+                    print("\nInvalid subject number!")
+            except ValueError:
+                print("\nEnter a valid input please!")
 
     elif choice == "4":
 
@@ -67,24 +70,28 @@ while True:
 
             for i in range(len(subjects)):
                 print(i + 1, ".", subjects[i])
+                
+            try: 
+                subject_choice = int(input("\nEnter subject number: "))
 
-            subject_choice = int(input("\nEnter subject number: "))
+                if subject_choice >= 1 and subject_choice <= len(subjects):
 
-            if subject_choice >= 1 and subject_choice <= len(subjects):
+                    selected_subject = subjects[subject_choice - 1]
 
-                selected_subject = subjects[subject_choice - 1]
+                    print("\nNotes for", selected_subject + ":")
 
-                print("\nNotes for", selected_subject + ":")
+                    if selected_subject not in notes or len(notes[selected_subject]) == 0:
+                        print("No notes for this subject yet.")
 
-                if selected_subject not in notes or len(notes[selected_subject]) == 0:
-                    print("No notes for this subject yet.")
+                    else:
+                        for i in range(len(notes[selected_subject])):
+                            print(i + 1, ".", notes[selected_subject][i])
 
                 else:
-                    for i in range(len(notes[selected_subject])):
-                        print(i + 1, ".", notes[selected_subject][i])
-
-            else:
-                print("Invalid subject number!")
+                    print("Invalid subject number!")
+            except ValueError:
+                print("\nEnter a valid input please!")
+        
 
     elif choice == "5":
         print("\nThank you for using AI Study Assistant!")
