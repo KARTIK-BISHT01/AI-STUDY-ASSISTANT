@@ -10,7 +10,8 @@ while True:
     print("2. Add Subject")
     print("3. Add Notes")
     print("4. View Notes")
-    print("5. Exit")
+    print("5. Delete Subject")
+    print("6. Exit")
 
     choice = input("\nEnter your choice: ")
 
@@ -92,8 +93,39 @@ while True:
             except ValueError:
                 print("\nEnter a valid input please!")
         
+    elif choice =="5":
+        if len(subjects) ==0:
+            print("\nThere are No Subjects!")
+            
+        else:
+            print("\nSelect the subject which you want to delete: ")
 
-    elif choice == "5":
+            for i in range(len(subjects)):
+                print(i+1,".", subjects[i])
+                
+            try:
+                subject_choice = int(input("\nEnter subject number: "))
+                
+                if subject_choice>=1 and subject_choice <= len(subjects):
+                    if subjects[subject_choice-1] in notes:
+                        deleted_notes=notes[subjects[subject_choice-1]]
+                        del notes[subjects[subject_choice-1]]
+                        deleted_subject=subjects.pop(subject_choice-1)
+                        print("\nThe Deleted subject is: ", deleted_subject)
+                        print("\nThe Deleted subject notes are: ", deleted_notes)
+
+                    else:
+                        deleted_subject=subjects.pop(subject_choice-1)
+                        print("\nThe Deleted subject is: ", deleted_subject)
+                        print("\nNo notes of this subject were added! ")
+                        
+                else:
+                    print("\nNo such subject exist!")
+                    
+            except ValueError:
+                print("\nPlease enter a valid input! ")
+                    
+    elif choice == "6":
         print("\nThank you for using AI Study Assistant!")
         break
 
