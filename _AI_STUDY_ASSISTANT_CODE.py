@@ -1,9 +1,18 @@
+import json
 print("=================================")
 print("       AI STUDY ASSISTANT")
 print("=================================")
 
-subjects = []
-notes={}
+try:
+    with open("saved_data.json","r") as file:
+        data=json.load(file)
+        subjects=data["subjects"]
+        notes=data["notes"]
+    print("Welcome Back!")
+except FileNotFoundError:
+    subjects = []
+    notes={}
+    print("Hello New User!")
 n=0
 while True:
 
@@ -255,6 +264,9 @@ while True:
         
             
     elif choice == "9":
+        data={"subjects":subjects,"notes":notes}
+        with open("saved_data.json","w") as file:
+            json.dump(data,file)    
         print("\nThank you for using AI Study Assistant!")
         break
 
