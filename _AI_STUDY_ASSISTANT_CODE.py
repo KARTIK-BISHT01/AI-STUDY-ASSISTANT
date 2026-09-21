@@ -206,6 +206,52 @@ while True:
             except ValueError:
                 print("\nEnter a valid input!")
                     
+    elif choice =="8":
+        if len(subjects) ==0:
+            print("\nAdd a subjects First!")
+            
+        else:
+            print("\nSelect a subject First:")
+            
+            for i in range(len(subjects)):
+                print(i+1,".",subjects[i])
+                
+            try:    
+                subject_choice=int(input("\nEnter the subject number:"))
+                
+                if subject_choice>=1 and subject_choice<=len(subjects):
+                    
+                    if subjects[subject_choice-1] not in notes:
+                        print("\nAdd notes First!")
+                        
+                    else:
+                        print("\nSelect the note you want to Edit:")
+                        
+                        for i in notes[subjects[subject_choice-1]]:
+                            n=n+1
+                            print(n,".",i)
+                        n=0    
+                        
+                        try:    
+                            note_choice=int(input("\nEnter the serial number of the note which you want to Edit:"))
+                        
+                            if note_choice>=1 and note_choice<=len(notes[subjects[subject_choice-1]]):
+                                New_note=input("\nAdd new note:")
+                                old_note=notes[subjects[subject_choice-1]][note_choice-1]
+                                print("Note changed in ",subjects[subject_choice-1]," from ",old_note," ----> ",New_note)
+                                notes[subjects[subject_choice-1]][note_choice-1]=New_note
+                                  
+                            else:
+                                print("\nNo note at that serial number exists!")
+                            
+                        except ValueError:
+                            print("\nEnter a valid input!")
+                        
+                else:
+                    print("\nNo subject at that serial number exists!")
+                     
+            except ValueError:
+                print("\nEnter a valid input!")
         
             
     elif choice == "9":
