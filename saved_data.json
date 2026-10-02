@@ -1,1 +1,1 @@
-{"subjects": ["OS"], "notes": {"OS": ["RAG", "CPU Scheduling"]}}
+{"subjects": [[1, "Web Development"], [2, "Operating System"]], "notes": {"OS": ["RAG", "CPU Scheduling"]}}

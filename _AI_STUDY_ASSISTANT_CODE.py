@@ -35,15 +35,15 @@ while True:
 
     if choice == "1":
         cursor.execute("select * from subjects")
-        results = cursor.fetchall()
+        subjects = cursor.fetchall()
 
-        if len(results) == 0:
+        if len(subjects) == 0:
             print("No subjects added yet.")
 
         else:
             print("\nYour Subjects:")
-            for i in range(len(results)):
-                sub_name=results[i]
+            for i in range(len(subjects)):
+                sub_name=subjects[i]
                 print(i + 1, ".", sub_name[1])
 
     elif choice == "2":
@@ -54,30 +54,33 @@ while True:
         print("\nSubject added successfully!")
        
     elif choice == "3":
-        if len(subjects)==0:
+        cursor.execute("select * from subjects")
+        subjects = cursor.fetchall()
+        if len(subjects) == 0:
             print("\nPlease add a subject first.")
             
         else:
             print("\nSelect a subject.")
             
             for i in range(len(subjects)):
-                print(i+1,".",subjects[i])
+                sub_name=subjects[i]
+                print(i+1,".",sub_name[1])
 
             try:    
                 subject_choice=int(input("\nEnter subject number:"))
                 
                 if subject_choice>=1 and subject_choice<=len(subjects):
                     selected_subject=subjects[subject_choice-1]
+                    sub_id=selected_subject[0]
                     
                     note=input("\nEnter your note:")
-                    
-                    if selected_subject not in notes:
-                        notes[selected_subject]=[]
-                    notes[selected_subject].append(note)
-                    print("\nNote added successfully!")
+                    cursor.execute("insert into notes(subject_id,note_text) values(%s,%s)",(sub_id,note,))
+                    myconn.commit()
+                    print("/nNotes added successfully!")
                         
                 else:
                     print("\nInvalid subject number!")
+                    
             except ValueError:
                 print("\nEnter a valid input please!")
 
