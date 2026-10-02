@@ -1,7 +1,11 @@
+import mysql.connector as mysqltor
 import json
 print("=================================")
 print("       AI STUDY ASSISTANT")
 print("=================================")
+
+myconn=mysqltor.connect(host="localhost",user="root",password="abcd",database="ai_study_assistant")
+cursor=myconn.cursor()
 
 try:
     with open("saved_data.json","r") as file:
@@ -14,6 +18,7 @@ except FileNotFoundError:
     notes={}
     print("Hello New User!")
 n=0
+
 while True:
 
     print("\n1. View Subjects")
@@ -29,23 +34,25 @@ while True:
     choice = input("\nEnter your choice: ")
 
     if choice == "1":
+        cursor.execute("select * from subjects")
+        results = cursor.fetchall()
 
-        if len(subjects) == 0:
+        if len(results) == 0:
             print("No subjects added yet.")
 
         else:
             print("\nYour Subjects:")
-            for i in range(len(subjects)):
-                print(i + 1, ".", subjects[i])
+            for i in range(len(results)):
+                sub_name=results[i]
+                print(i + 1, ".", sub_name[1])
 
     elif choice == "2":
 
         subject = input("\nEnter subject name: ")
-
-        subjects.append(subject)
-
-        print("Subject added successfully!")
-
+        cursor.execute("insert into subjects (subject_name) values(%s)",(subject,))
+        myconn.commit()
+        print("\nSubject added successfully!")
+       
     elif choice == "3":
         if len(subjects)==0:
             print("\nPlease add a subject first.")
@@ -266,7 +273,8 @@ while True:
     elif choice == "9":
         data={"subjects":subjects,"notes":notes}
         with open("saved_data.json","w") as file:
-            json.dump(data,file)    
+            json.dump(data,file)
+        myconn.close()    
         print("\nThank you for using AI Study Assistant!")
         break
 
