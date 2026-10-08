@@ -38,7 +38,7 @@ while True:
         subjects = cursor.fetchall()
 
         if len(subjects) == 0:
-            print("No subjects added yet.")
+            print("\nNo subjects added yet.")
 
         else:
             print("\nYour Subjects:")
@@ -112,7 +112,7 @@ while True:
                     notes=cursor.fetchall()
 
                     if len(notes) == 0:
-                        print("No notes for this subject yet.")
+                        print("\nNo notes for this subject yet.")
                         
                     else:
                         for i in range(len(notes)):
@@ -120,35 +120,34 @@ while True:
                             print(i + 1, ".", n_name[2])
 
                 else:
-                    print("Invalid subject number!")
+                    print("\nInvalid subject number!")
             except ValueError:
                 print("\nEnter a valid input please!")
         
     elif choice =="5":
-        if len(subjects) ==0:
+
+        cursor.execute("select * from subjects")
+        subjects = cursor.fetchall()
+        if len(subjects) == 0:
             print("\nThere are No Subjects!")
             
         else:
             print("\nSelect the subject which you want to delete: ")
 
             for i in range(len(subjects)):
-                print(i+1,".", subjects[i])
+                sub_name=subjects[i]
+                print(i + 1,".", sub_name[1])
                 
             try:
                 subject_choice = int(input("\nEnter subject number: "))
                 
                 if subject_choice>=1 and subject_choice <= len(subjects):
-                    if subjects[subject_choice-1] in notes:
-                        deleted_notes=notes[subjects[subject_choice-1]]
-                        del notes[subjects[subject_choice-1]]
-                        deleted_subject=subjects.pop(subject_choice-1)
-                        print("\nThe Deleted subject is: ", deleted_subject)
-                        print("\nThe Deleted subject notes are: ", deleted_notes)
-
-                    else:
-                        deleted_subject=subjects.pop(subject_choice-1)
-                        print("\nThe Deleted subject is: ", deleted_subject)
-                        print("\nNo notes of this subject were added! ")
+                    selected_subject = subjects[subject_choice - 1]
+                    sub_name=selected_subject[1]
+                    sub_id=selected_subject[0]
+                    cursor.execute("delete from subjects where id = %s",(sub_id,))
+                    myconn.commit()
+                    print("\nDeleted subject --> ",sub_name)
                         
                 else:
                     print("\nNo such subject exist!")
