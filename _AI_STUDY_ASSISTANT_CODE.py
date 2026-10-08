@@ -85,7 +85,9 @@ while True:
                 print("\nEnter a valid input please!")
 
     elif choice == "4":
-
+        
+        cursor.execute("select * from subjects")
+        subjects = cursor.fetchall() 
         if len(subjects) == 0:
             print("\nPlease add a subject first.")
 
@@ -93,23 +95,29 @@ while True:
             print("\nSelect a subject:")
 
             for i in range(len(subjects)):
-                print(i + 1, ".", subjects[i])
+                sub_name=subjects[i]
+                print(i + 1, ".", sub_name[1])
                 
             try: 
                 subject_choice = int(input("\nEnter subject number: "))
 
                 if subject_choice >= 1 and subject_choice <= len(subjects):
-
                     selected_subject = subjects[subject_choice - 1]
+                    sub_name=selected_subject[1]
+                    sub_id=selected_subject[0]
 
-                    print("\nNotes for", selected_subject + ":")
+                    print("\nNotes for", sub_name + ":")
+                    
+                    cursor.execute("select*from notes where subject_id = %s",(sub_id,))
+                    notes=cursor.fetchall()
 
-                    if selected_subject not in notes or len(notes[selected_subject]) == 0:
+                    if len(notes) == 0:
                         print("No notes for this subject yet.")
-
+                        
                     else:
-                        for i in range(len(notes[selected_subject])):
-                            print(i + 1, ".", notes[selected_subject][i])
+                        for i in range(len(notes)):
+                            n_name=notes[i]
+                            print(i + 1, ".", n_name[2])
 
                 else:
                     print("Invalid subject number!")
