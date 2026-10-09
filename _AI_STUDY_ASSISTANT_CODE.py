@@ -1,290 +1,140 @@
+import tkinter as tk
+from tkinter import messagebox, simpledialog
 import mysql.connector as mysqltor
 
-print("=================================")
-print("       AI STUDY ASSISTANT")
-print("=================================")
+myconn = mysqltor.connect(host="localhost", user="root", password="abcd", database="ai_study_assistant")
+cursor = myconn.cursor()
 
-myconn=mysqltor.connect(host="localhost",user="root",password="abcd",database="ai_study_assistant")
-cursor=myconn.cursor()
+current_subjects = []
 
-while True:
+def refresh_subjects():
+    global current_subjects
+    subject_listbox.delete(0, tk.END)
+    cursor.execute("select * from subjects")
+    current_subjects = cursor.fetchall()
+    for i, row in enumerate(current_subjects, start=1):
+        subject_listbox.insert(tk.END, f"{i} - {row[1]}")
 
-    print("\n1. View Subjects")
-    print("2. Add Subject")
-    print("3. Add Notes")
-    print("4. View Notes")
-    print("5. Delete Subject")
-    print("6. Edit Subject")
-    print("7. Delete Notes")
-    print("8. Edit Notes")
-    print("9. Exit")
+def add_subject():
+    name = subject_entry.get()
+    if name.strip() == "":
+        messagebox.showwarning("Error", "Subject name can't be empty!")
+        return
+    cursor.execute("insert into subjects (subject_name) values (%s)", (name,))
+    myconn.commit()
+    subject_entry.delete(0, tk.END)
+    refresh_subjects()
 
-    choice = input("\nEnter your choice: ")
+def delete_subject():
+    selection = subject_listbox.curselection()
+    if not selection:
+        messagebox.showwarning("Error", "Select a subject first!")
+        return
+    sub_id = current_subjects[selection[0]][0]
+    cursor.execute("delete from subjects where id = %s", (sub_id,))
+    myconn.commit()
+    refresh_subjects()
 
-    if choice == "1":
-        cursor.execute("select * from subjects")
-        subjects = cursor.fetchall()
-
-        if len(subjects) == 0:
-            print("\nNo subjects added yet.")
-
-        else:
-            print("\nYour Subjects:")
-            for i in range(len(subjects)):
-                sub_name=subjects[i]
-                print(i + 1, ".", sub_name[1])
-
-    elif choice == "2":
-
-        subject = input("\nEnter subject name: ")
-        cursor.execute("insert into subjects (subject_name) values(%s)",(subject,))
+def edit_subject():
+    selection = subject_listbox.curselection()
+    if not selection:
+        messagebox.showwarning("Error", "Select a subject first!")
+        return
+    sub_id = current_subjects[selection[0]][0]
+    new_name = simpledialog.askstring("Edit Subject", "Enter new subject name:")
+    if new_name:
+        cursor.execute("update subjects set subject_name = %s where id = %s", (new_name, sub_id))
         myconn.commit()
-        print("\nSubject added successfully!")
-       
-    elif choice == "3":
-        cursor.execute("select * from subjects")
-        subjects = cursor.fetchall()
-        if len(subjects) == 0:
-            print("\nPlease add a subject first.")
-            
-        else:
-            print("\nSelect a subject.")
-            
-            for i in range(len(subjects)):
-                sub_name=subjects[i]
-                print(i+1,".",sub_name[1])
+        refresh_subjects()
 
-            try:    
-                subject_choice=int(input("\nEnter subject number:"))
-                
-                if subject_choice>=1 and subject_choice<=len(subjects):
-                    selected_subject=subjects[subject_choice-1]
-                    sub_id=selected_subject[0]
-                    
-                    note=input("\nEnter your note:")
-                    cursor.execute("insert into notes(subject_id,note_text) values(%s,%s)",(sub_id,note,))
-                    myconn.commit()
-                    print("\nNotes added successfully!")
-                        
-                else:
-                    print("\nInvalid subject number!")
-                    
-            except ValueError:
-                print("\nEnter a valid input please!")
+def open_notes_window():
+    selection = subject_listbox.curselection()
+    if not selection:
+        messagebox.showwarning("Error", "Select a subject first!")
+        return
 
-    elif choice == "4":
-        
-        cursor.execute("select * from subjects")
-        subjects = cursor.fetchall() 
-        if len(subjects) == 0:
-            print("\nPlease add a subject first.")
+    sub_id = current_subjects[selection[0]][0]
+    sub_name = current_subjects[selection[0]][1]
 
-        else:
-            print("\nSelect a subject:")
+    current_notes = []
 
-            for i in range(len(subjects)):
-                sub_name=subjects[i]
-                print(i + 1, ".", sub_name[1])
-                
-            try: 
-                subject_choice = int(input("\nEnter subject number: "))
+    notes_window = tk.Toplevel(window)
+    notes_window.title(f"Notes for {sub_name}")
+    notes_window.geometry("400x400")
 
-                if subject_choice >= 1 and subject_choice <= len(subjects):
-                    selected_subject = subjects[subject_choice - 1]
-                    sub_name=selected_subject[1]
-                    sub_id=selected_subject[0]
+    notes_listbox = tk.Listbox(notes_window, width=50)
+    notes_listbox.pack(pady=10)
 
-                    print("\nNotes for", sub_name + ":")
-                    
-                    cursor.execute("select*from notes where subject_id = %s",(sub_id,))
-                    notes=cursor.fetchall()
+    notes_entry = tk.Entry(notes_window, width=40)
+    notes_entry.pack(pady=5)
 
-                    if len(notes) == 0:
-                        print("\nNo notes for this subject yet.")
-                        
-                    else:
-                        for i in range(len(notes)):
-                            n_name=notes[i]
-                            print(i + 1, ".", n_name[2])
+    def refresh_notes():
+        nonlocal current_notes
+        notes_listbox.delete(0, tk.END)
+        cursor.execute("select * from notes where subject_id = %s", (sub_id,))
+        current_notes = cursor.fetchall()
+        for i, row in enumerate(current_notes, start=1):
+            notes_listbox.insert(tk.END, f"{i} - {row[2]}")
 
-                else:
-                    print("\nInvalid subject number!")
-            except ValueError:
-                print("\nEnter a valid input please!")
-        
-    elif choice =="5":
+    def add_note():
+        text = notes_entry.get()
+        if text.strip() == "":
+            messagebox.showwarning("Error", "Note can't be empty!")
+            return
+        cursor.execute("insert into notes (subject_id, note_text) values (%s, %s)", (sub_id, text))
+        myconn.commit()
+        notes_entry.delete(0, tk.END)
+        refresh_notes()
 
-        cursor.execute("select * from subjects")
-        subjects = cursor.fetchall()
-        if len(subjects) == 0:
-            print("\nThere are No Subjects!")
-            
-        else:
-            print("\nSelect the subject which you want to delete: ")
+    def delete_note():
+        sel = notes_listbox.curselection()
+        if not sel:
+            messagebox.showwarning("Error", "Select a note first!")
+            return
+        note_id = current_notes[sel[0]][0]
+        cursor.execute("delete from notes where id = %s", (note_id,))
+        myconn.commit()
+        refresh_notes()
 
-            for i in range(len(subjects)):
-                sub_name=subjects[i]
-                print(i + 1,".", sub_name[1])
-                
-            try:
-                subject_choice = int(input("\nEnter subject number: "))
-                
-                if subject_choice>=1 and subject_choice <= len(subjects):
-                    selected_subject = subjects[subject_choice - 1]
-                    sub_name=selected_subject[1]
-                    sub_id=selected_subject[0]
-                    cursor.execute("delete from subjects where id = %s",(sub_id,))
-                    myconn.commit()
-                    print("\nDeleted subject --> ",sub_name)
-                        
-                else:
-                    print("\nNo such subject exist!")
-                    
-            except ValueError:
-                print("\nPlease enter a valid input! ")
-                    
-    elif choice =="6":
+    def edit_note():
+        sel = notes_listbox.curselection()
+        if not sel:
+            messagebox.showwarning("Error", "Select a note first!")
+            return
+        note_id = current_notes[sel[0]][0]
+        new_text = simpledialog.askstring("Edit Note", "Enter new note text:")
+        if new_text:
+            cursor.execute("update notes set note_text = %s where id = %s", (new_text, note_id))
+            myconn.commit()
+            refresh_notes()
 
-        cursor.execute("select * from subjects")
-        subjects = cursor.fetchall() 
-        if len(subjects) == 0:
-            print("\nNo subjects to Edit! ")
-            
-        else:
-            print("\nSelect the subject you want to Edit:")
+    tk.Button(notes_window, text="Add Note", command=add_note).pack(pady=2)
+    tk.Button(notes_window, text="Edit Selected", command=edit_note).pack(pady=2)
+    tk.Button(notes_window, text="Delete Selected", command=delete_note).pack(pady=2)
 
-            for i in range(len(subjects)):
-                 sub_name=subjects[i]
-                 print(i+1,".",sub_name[1])
-                
-            try:
-                subject_choice = int(input("\nEnter the subject number:"))
+    refresh_notes()
 
-                if subject_choice>=1 and subject_choice<= len(subjects):
-                    new_subname=input("\nEnter new subject name: ")
-                    sub_name=subjects[subject_choice-1]
-                    sub_id=sub_name[0]
-                    cursor.execute("update subjects set subject_name = %s where id = %s",(new_subname,sub_id))
-                    myconn.commit()
-                    print("subject name changed from",sub_name[1]," ---> ",new_subname)
-                        
-                else:
-                    print("\nNo such subject exists! ")
-                    
-            except ValueError:
-                print("\nPlease enter a valid input! ")
-            
+def on_closing():
+    myconn.close()
+    window.destroy()
 
-    elif choice == "7":
-        cursor.execute("select * from subjects")
-        subjects = cursor.fetchall() 
-        if len(subjects) == 0:
-            print("\nAdd a subjects First!")
-            
-        else:
-            print("\nSelect a subject First:")
-            
-            for i in range(len(subjects)):
-                sub_name=subjects[i]
-                print(i+1,".",sub_name[1])
-                
-            try:    
-                subject_choice=int(input("\nEnter the subject number:"))
-                
-                if subject_choice>=1 and subject_choice<=len(subjects):
-                    sub_name = subjects[subject_choice-1]
-                    sub_id = sub_name[0]
-                    cursor.execute("Select * from notes where subject_id = %s",(sub_id,))
-                    notes = cursor.fetchall()
-                    if len(notes) == 0:
-                        print("\nAdd notes First!")
-                        
-                    else:
-                        print("\nSelect the note you want to Delete:")
-                        
-                        for i in range(len(notes)):
-                            note_name=notes[i]
-                            print(i+1 , "." , note_name[2])    
-                        
-                        try:    
-                            note_choice=int(input("\nEnter the serial number of the note which you want to delete:"))
-                            if note_choice>=1 and note_choice<=len(notes):
-                                selected_note=notes[note_choice-1]
-                                note_id=selected_note[0]
-                                cursor.execute("delete from notes where id = %s",(note_id,))
-                                myconn.commit()
-                                print("\nNotes successfully deleted!")
-                            else:
-                                print("\nNo note at that serial number exists!")
-                            
-                        except ValueError:
-                            print("\nEnter a valid input!")
-                        
-                else:
-                    print("\nNo subject at that serial number exists!")
-                     
-            except ValueError:
-                print("\nEnter a valid input!")
-                    
-    elif choice =="8":
-        cursor.execute("select * from subjects")
-        subjects = cursor.fetchall() 
-        if len(subjects) ==0:
-            print("\nAdd a subjects First!")
-            
-        else:
-            print("\nSelect a subject First:")
-            
-            for i in range(len(subjects)):
-                sub_name=subjects[i]
-                print(i+1,".",sub_name[1])
-                
-            try:    
-                subject_choice=int(input("\nEnter the subject number:"))
-                
-                if subject_choice>=1 and subject_choice<=len(subjects):
-                    sub_name = subjects[subject_choice-1]
-                    sub_id = sub_name[0]
-                    cursor.execute("Select * from notes where subject_id = %s",(sub_id,))
-                    notes = cursor.fetchall()
-                    if len(notes) == 0:
-                        print("\nAdd notes First!")
-                        
-                    else:
-                        print("\nSelect the note you want to Edit:")
-                        
-                        for i in range(len(notes)):
-                            note_name=notes[i]
-                            print(i+1 , "." , note_name[2])  
-                        
-                        try:    
-                            note_choice=int(input("\nEnter the serial number of the note which you want to Edit:"))
-                        
-                            if note_choice>=1 and note_choice<=len(notes):
-                                New_note=input("\nAdd new note:")
-                                note_tuple=notes[note_choice-1]
-                                note_id=note_tuple[0]
-                                cursor.execute("update notes set note_text = %s where id = %s",(New_note,note_id))
-                                myconn.commit()
-                                print("Note changed in ",sub_name[1]," from ",note_tuple[2]," ----> ",New_note)
-                                  
-                            else:
-                                print("\nNo note at that serial number exists!")
-                            
-                        except ValueError:
-                            print("\nEnter a valid input!")
-                        
-                else:
-                    print("\nNo subject at that serial number exists!")
-                     
-            except ValueError:
-                print("\nEnter a valid input!")
-        
-            
-    elif choice == "9":
-        myconn.close()    
-        print("\nThank you for using AI Study Assistant!")
-        break
+window = tk.Tk()
+window.title("AI Study Assistant")
+window.geometry("400x450")
 
-    else:
-        print("\nInvalid choice!")
+subject_listbox = tk.Listbox(window, width=50)
+subject_listbox.pack(pady=10)
+
+subject_entry = tk.Entry(window, width=40)
+subject_entry.pack(pady=5)
+
+tk.Button(window, text="Add Subject", command=add_subject).pack(pady=2)
+tk.Button(window, text="Edit Selected", command=edit_subject).pack(pady=2)
+tk.Button(window, text="Delete Selected", command=delete_subject).pack(pady=2)
+tk.Button(window, text="View Notes for Selected", command=open_notes_window).pack(pady=2)
+tk.Button(window, text="Exit", command=on_closing).pack(pady=2)
+
+window.protocol("WM_DELETE_WINDOW", on_closing)
+
+refresh_subjects()
+window.mainloop()
