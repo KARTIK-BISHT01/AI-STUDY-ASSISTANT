@@ -76,7 +76,7 @@ while True:
                     note=input("\nEnter your note:")
                     cursor.execute("insert into notes(subject_id,note_text) values(%s,%s)",(sub_id,note,))
                     myconn.commit()
-                    print("/nNotes added successfully!")
+                    print("\nNotes added successfully!")
                         
                 else:
                     print("\nInvalid subject number!")
@@ -156,29 +156,29 @@ while True:
                 print("\nPlease enter a valid input! ")
                     
     elif choice =="6":
-        if len(subjects) ==0:
+
+        cursor.execute("select * from subjects")
+        subjects = cursor.fetchall() 
+        if len(subjects) == 0:
             print("\nNo subjects to Edit! ")
+            
         else:
             print("\nSelect the subject you want to Edit:")
 
             for i in range(len(subjects)):
-                print(i+1,".",subjects[i])
+                 sub_name=subjects[i]
+                 print(i+1,".",sub_name[1])
                 
             try:
                 subject_choice = int(input("\nEnter the subject number:"))
 
                 if subject_choice>=1 and subject_choice<= len(subjects):
                     new_subname=input("\nEnter new subject name: ")
-                    print("subject name changed from",subjects[subject_choice-1],"--->",new_subname)
-                    old_subname=subjects[subject_choice-1]
-                    subjects[subject_choice-1]=new_subname
-                    
-                    if old_subname in notes:
-                        notes[new_subname]=notes[old_subname]
-                        del notes[old_subname]
-                        
-                    else:
-                        print("\nNo notes of this subject exists! ")
+                    sub_name=subjects[subject_choice-1]
+                    sub_id=sub_name[0]
+                    cursor.execute("update subjects set subject_name = %s where id = %s",(new_subname,sub_id))
+                    myconn.commit()
+                    print("subject name changed from",sub_name[1]," ---> ",new_subname)
                         
                 else:
                     print("\nNo such subject exists! ")
@@ -188,6 +188,8 @@ while True:
             
 
     elif choice =="7":
+        cursor.execute("select * from subjects")
+        subjects = cursor.fetchall() 
         if len(subjects) ==0:
             print("\nAdd a subjects First!")
             
@@ -195,7 +197,8 @@ while True:
             print("\nSelect a subject First:")
             
             for i in range(len(subjects)):
-                print(i+1,".",subjects[i])
+                sub_name=subjects[i]
+                print(i+1,".",sub_name[1])
                 
             try:    
                 subject_choice=int(input("\nEnter the subject number:"))
