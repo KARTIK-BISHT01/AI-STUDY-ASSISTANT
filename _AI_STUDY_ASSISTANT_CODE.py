@@ -187,10 +187,10 @@ while True:
                 print("\nPlease enter a valid input! ")
             
 
-    elif choice =="7":
+    elif choice == "7":
         cursor.execute("select * from subjects")
         subjects = cursor.fetchall() 
-        if len(subjects) ==0:
+        if len(subjects) == 0:
             print("\nAdd a subjects First!")
             
         else:
@@ -204,25 +204,28 @@ while True:
                 subject_choice=int(input("\nEnter the subject number:"))
                 
                 if subject_choice>=1 and subject_choice<=len(subjects):
-                    
-                    if subjects[subject_choice-1] not in notes:
+                    sub_name = subjects[subject_choice-1]
+                    sub_id = sub_name[0]
+                    cursor.execute("Select * from notes where subject_id = %s",(sub_id,))
+                    notes = cursor.fetchall()
+                    if len(notes) == 0:
                         print("\nAdd notes First!")
                         
                     else:
                         print("\nSelect the note you want to Delete:")
                         
-                        for i in notes[subjects[subject_choice-1]]:
-                            n=n+1
-                            print(n,".",i)
-                        n=0    
+                        for i in range(len(notes)):
+                            note_name=notes[i]
+                            print(i+1 , "." , note_name[2])    
                         
                         try:    
                             note_choice=int(input("\nEnter the serial number of the note which you want to delete:"))
-                        
-                            if note_choice>=1 and note_choice<=len(notes[subjects[subject_choice-1]]):
-                                deleted_note=notes[subjects[subject_choice-1]].pop(note_choice-1)
-                                print("\nDelete note:",deleted_note)
-                                
+                            if note_choice>=1 and note_choice<=len(notes):
+                                selected_note=notes[note_choice-1]
+                                note_id=selected_note[0]
+                                cursor.execute("delete from notes where id = %s",(note_id,))
+                                myconn.commit()
+                                print("\nNotes successfully deleted!")
                             else:
                                 print("\nNo note at that serial number exists!")
                             
