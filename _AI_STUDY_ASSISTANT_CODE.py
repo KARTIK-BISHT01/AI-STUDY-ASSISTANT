@@ -5,6 +5,74 @@ import mysql.connector as mysqltor
 myconn = mysqltor.connect(host="localhost", user="root", password="abcd", database="ai_study_assistant")
 cursor = myconn.cursor()
 
+def open_quiz_window():
+    selection = subject_listbox.curselection()
+    if not selection:
+        messagebox.showwarning("Error", "Select a subject first!")
+        return
+
+    sub_id = current_subjects[selection[0]][0]
+    sub_name = current_subjects[selection[0]][1]
+
+    cursor.execute("select * from notes where subject_id = %s", (sub_id,))
+    quiz_notes = cursor.fetchall()
+
+    if len(quiz_notes) == 0:
+        messagebox.showwarning("Error", "This subject has no notes to quiz on!")
+        return
+
+    quiz_window = tk.Toplevel(window)
+    quiz_window.title(f"Quiz: {sub_name}")
+    quiz_window.geometry("400x300")
+
+    state = {"index": 0, "score": 0}
+
+    question_label = tk.Label(quiz_window, text="", wraplength=350, font=("Arial", 12))
+    question_label.pack(pady=20)
+
+    show_button = tk.Button(quiz_window, text="Show Answer")
+    show_button.pack(pady=5)
+
+    correct_button = tk.Button(quiz_window, text="Correct")
+    incorrect_button = tk.Button(quiz_window, text="Incorrect")
+
+    def load_question():
+        correct_button.pack_forget()
+        incorrect_button.pack_forget()
+        show_button.pack(pady=5)
+        note_text = quiz_notes[state["index"]][2]
+        question_label.config(text=f"Note {state['index']+1} of {len(quiz_notes)}: Try to recall it, then click Show Answer.")
+        show_button.config(command=lambda: reveal_answer(note_text))
+
+    def reveal_answer(note_text):
+        question_label.config(text=note_text)
+        show_button.pack_forget()
+        correct_button.pack(pady=5)
+        incorrect_button.pack(pady=5)
+
+    def answer(is_correct):
+        if is_correct:
+            state["score"] += 1
+        state["index"] += 1
+        if state["index"] < len(quiz_notes):
+            load_question()
+        else:
+            finish_quiz()
+
+    def finish_quiz():
+        cursor.execute(
+            "insert into quiz_results (subject_id, score, total) values (%s, %s, %s)",
+            (sub_id, state["score"], len(quiz_notes))
+        )
+        myconn.commit()
+        messagebox.showinfo("Quiz Complete", f"You scored {state['score']} out of {len(quiz_notes)}!")
+        quiz_window.destroy()
+
+    correct_button.config(command=lambda: answer(True))
+    incorrect_button.config(command=lambda: answer(False))
+
+    load_question()
+
 current_subjects = []
 
 def refresh_subjects():
@@ -132,6 +200,7 @@ tk.Button(window, text="Add Subject", command=add_subject).pack(pady=2)
 tk.Button(window, text="Edit Selected", command=edit_subject).pack(pady=2)
 tk.Button(window, text="Delete Selected", command=delete_subject).pack(pady=2)
 tk.Button(window, text="View Notes for Selected", command=open_notes_window).pack(pady=2)
+tk.Button(window, text="Start Quiz for Selected", command=open_quiz_window).pack(pady=2)
 tk.Button(window, text="Exit", command=on_closing).pack(pady=2)
 
 window.protocol("WM_DELETE_WINDOW", on_closing)
