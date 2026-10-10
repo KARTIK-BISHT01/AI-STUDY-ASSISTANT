@@ -5,6 +5,32 @@ import mysql.connector as mysqltor
 myconn = mysqltor.connect(host="localhost", user="root", password="abcd", database="ai_study_assistant")
 cursor = myconn.cursor()
 
+def open_progress_window():
+    selection = subject_listbox.curselection()
+    if not selection:
+        messagebox.showwarning("Error", "Select a subject first!")
+        return
+
+    sub_id = current_subjects[selection[0]][0]
+    sub_name = current_subjects[selection[0]][1]
+
+    cursor.execute("select score, total, quiz_date from quiz_results where subject_id = %s order by quiz_date", (sub_id,))
+    results = cursor.fetchall()
+
+    progress_window = tk.Toplevel(window)
+    progress_window.title(f"Progress: {sub_name}")
+    progress_window.geometry("400x300")
+
+    if len(results) == 0:
+        tk.Label(progress_window, text="No quiz attempts yet for this subject.").pack(pady=20)
+    else:
+        listbox = tk.Listbox(progress_window, width=50)
+        listbox.pack(pady=10, fill="both", expand=True)
+        for row in results:
+            score, total, date = row
+            percent = round((score / total) * 100)
+            listbox.insert(tk.END, f"{date.strftime('%Y-%m-%d %H:%M')} — {score}/{total} ({percent}%)")
+
 def open_quiz_window():
     selection = subject_listbox.curselection()
     if not selection:
@@ -201,6 +227,7 @@ tk.Button(window, text="Edit Selected", command=edit_subject).pack(pady=2)
 tk.Button(window, text="Delete Selected", command=delete_subject).pack(pady=2)
 tk.Button(window, text="View Notes for Selected", command=open_notes_window).pack(pady=2)
 tk.Button(window, text="Start Quiz for Selected", command=open_quiz_window).pack(pady=2)
+tk.Button(window, text="View Progress for Selected", command=open_progress_window).pack(pady=2)
 tk.Button(window, text="Exit", command=on_closing).pack(pady=2)
 
 window.protocol("WM_DELETE_WINDOW", on_closing)
